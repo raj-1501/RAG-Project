@@ -14,35 +14,243 @@ st.set_page_config(page_title="Neural Voice RAG", page_icon="🧿", layout="wide
 
 st.markdown("""
     <style>
-    /* Global Dark Theme */
-    .stApp { background-color: #090b10; color: #e2e8f0; font-family: 'Consolas', 'Courier New', monospace; }
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+    /* Hide standard elements */
+    header[data-testid="stHeader"] { display: none !important; }
+    footer { display: none !important; }
+
+    /* Global Deep Space Theme */
+    .stApp { 
+        background-color: #020617;
+        background-image: 
+            radial-gradient(circle at 50% 50%, rgba(0, 229, 255, 0.05) 0%, transparent 60%),
+            repeating-radial-gradient(circle at 50% 50%, transparent 0, transparent 40px, rgba(0, 229, 255, 0.03) 41px, rgba(0, 229, 255, 0.03) 42px);
+        color: #e2e8f0; 
+        font-family: 'Rajdhani', sans-serif; 
+        overflow-x: hidden;
+    }
     
-    /* Center Aligned Main Titles */
-    .main-title { text-align: center; color: #00e5ff; font-weight: 900; letter-spacing: 3px; text-shadow: 0px 0px 10px rgba(0, 229, 255, 0.5); margin-bottom: 5px;}
-    .sub-title { text-align: center; color: #b100cd; font-size: 1.1rem; letter-spacing: 1px; margin-bottom: 40px; }
+    /* Radar Sweeping Animation */
+    .stApp::after {
+        content: "";
+        position: fixed;
+        top: 50%; left: 50%;
+        width: 150vw; height: 150vw;
+        background: conic-gradient(from 0deg, transparent 70%, rgba(0, 229, 255, 0.1) 100%);
+        transform-origin: center center;
+        transform: translate(-50%, -50%);
+        animation: radarSweep 10s linear infinite;
+        pointer-events: none;
+        z-index: 0;
+    }
+    @keyframes radarSweep { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+
+    /* Center Container & Elevate over Radar */
+    .block-container {
+        max-width: 95% !important;
+        padding-top: 2rem !important;
+        position: relative;
+        z-index: 10;
+    }
+
+    /* --- ORBITAL LAYOUT ARCHITECTURE --- */
+
+    /* 1. Left Pod (Data Ingestion) */
+    [data-testid="column"]:nth-of-type(1) {
+        background: rgba(2, 6, 23, 0.75);
+        border: 2px solid rgba(0, 229, 255, 0.3);
+        border-radius: 100px 30px 30px 100px; /* Curved Left */
+        padding: 50px 30px;
+        box-shadow: 0 0 40px rgba(0, 229, 255, 0.1);
+        backdrop-filter: blur(15px);
+        transform: perspective(800px) rotateY(10deg);
+        transition: transform 0.5s ease;
+        margin-top: 50px;
+    }
+    [data-testid="column"]:nth-of-type(1):hover { transform: perspective(800px) rotateY(0deg) scale(1.02); }
+
+    /* 2. Right Pod (System Output) */
+    [data-testid="column"]:nth-of-type(3) {
+        background: rgba(2, 6, 23, 0.75);
+        border: 2px solid rgba(177, 0, 205, 0.3);
+        border-radius: 30px 100px 100px 30px; /* Curved Right */
+        padding: 50px 30px;
+        box-shadow: 0 0 40px rgba(177, 0, 205, 0.1);
+        backdrop-filter: blur(15px);
+        transform: perspective(800px) rotateY(-10deg);
+        transition: transform 0.5s ease;
+        margin-top: 50px;
+    }
+    [data-testid="column"]:nth-of-type(3):hover { transform: perspective(800px) rotateY(0deg) scale(1.02); }
+
+    /* 3. Center Core (Audio Input & Engine) */
+    [data-testid="column"]:nth-of-type(2) {
+        background: radial-gradient(circle at 50% 50%, rgba(13, 22, 37, 0.95), rgba(2, 6, 23, 0.98));
+        border: 4px solid #00e5ff;
+        border-radius: 60px; /* Massive pill/oval shape */
+        padding: 60px 40px;
+        box-shadow: 0 0 60px rgba(0, 229, 255, 0.5), inset 0 0 40px rgba(0, 229, 255, 0.3);
+        position: relative;
+        animation: pulseCore 3s infinite alternate;
+        z-index: 20;
+    }
+    
+    /* Glowing Rotating Rings around Core */
+    [data-testid="column"]:nth-of-type(2)::before {
+        content: "";
+        position: absolute;
+        top: -30px; left: -30px; right: -30px; bottom: -30px;
+        border: 3px dashed rgba(177, 0, 205, 0.7);
+        border-radius: 80px;
+        animation: spinRing 20s linear infinite;
+        pointer-events: none;
+    }
+    [data-testid="column"]:nth-of-type(2)::after {
+        content: "";
+        position: absolute;
+        top: -50px; left: -50px; right: -50px; bottom: -50px;
+        border: 2px solid rgba(0, 229, 255, 0.4);
+        border-radius: 100px;
+        animation: spinRingRev 30s linear infinite;
+        pointer-events: none;
+    }
+    
+    @keyframes spinRing { 100% { transform: rotate(360deg); } }
+    @keyframes spinRingRev { 100% { transform: rotate(-360deg); } }
+    @keyframes pulseCore {
+        from { box-shadow: 0 0 40px rgba(0, 229, 255, 0.3), inset 0 0 30px rgba(0, 229, 255, 0.2); border-color: rgba(0,229,255,0.7); }
+        to { box-shadow: 0 0 90px rgba(0, 229, 255, 0.7), inset 0 0 70px rgba(0, 229, 255, 0.5); border-color: #00e5ff; }
+    }
+
+    /* Main Titles */
+    .main-title { 
+        text-align: center; 
+        font-family: 'Orbitron', sans-serif;
+        font-size: 4rem;
+        font-weight: 900; 
+        letter-spacing: 8px; 
+        background: -webkit-linear-gradient(#00e5ff, #ffffff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(0 0 15px rgba(0, 229, 255, 0.6));
+        margin-bottom: 0px;
+    }
+    
+    .sub-title { 
+        text-align: center; 
+        color: #b100cd; 
+        font-family: 'Orbitron', sans-serif;
+        font-size: 1.4rem; 
+        font-weight: 700;
+        letter-spacing: 5px; 
+        margin-bottom: 60px; 
+        text-transform: uppercase;
+        text-shadow: 0px 0px 15px rgba(177, 0, 205, 0.8);
+    }
     
     /* Column Headers */
-    h1, h2, h3 { color: #00e5ff !important; text-transform: uppercase; font-size: 1.2rem; border-bottom: 1px solid #1e293b; padding-bottom: 10px;}
+    h1, h2, h3 { 
+        color: #00e5ff !important; 
+        font-family: 'Orbitron', sans-serif;
+        text-align: center;
+        text-transform: uppercase; 
+        font-size: 1.4rem; 
+        border-bottom: none; 
+        padding-bottom: 15px;
+        margin-bottom: 25px;
+        letter-spacing: 2px;
+        text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+    }
     
     /* Audio Player Styling */
-    .stAudio { border-radius: 12px; border: 2px solid #b100cd; box-shadow: 0 0 15px rgba(177, 0, 205, 0.2); }
-    
-    /* Futuristic Buttons */
-    div.stButton > button:first-child { 
-        background: linear-gradient(90deg, #00e5ff, #b100cd); 
-        color: white; 
-        font-weight: 900; 
-        border-radius: 30px; 
-        border: none; 
-        padding: 15px; 
-        width: 100%;
-        transition: 0.3s; 
-        box-shadow: 0 4px 15px rgba(0, 229, 255, 0.3);
+    .stAudio { 
+        border-radius: 50px; /* Pill shape for audio */
+        border: 2px solid rgba(177, 0, 205, 0.6); 
+        box-shadow: 0 0 25px rgba(177, 0, 205, 0.3); 
+        background: rgba(0,0,0,0.7);
+        padding: 5px;
     }
-    div.stButton > button:first-child:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(177, 0, 205, 0.5); }
+    
+    /* Futuristic Buttons - Pill Shaped */
+    div.stButton > button:first-child { 
+        background: transparent;
+        color: #00e5ff; 
+        font-family: 'Orbitron', sans-serif;
+        font-weight: 900; 
+        letter-spacing: 3px;
+        border-radius: 50px; /* Completely rounded pill */
+        border: 2px solid #00e5ff; 
+        padding: 20px; 
+        width: 100%;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        box-shadow: 0 0 20px rgba(0, 229, 255, 0.2), inset 0 0 10px rgba(0, 229, 255, 0.2);
+        text-transform: uppercase;
+    }
+    div.stButton > button:first-child:hover { 
+        background: rgba(0, 229, 255, 0.2);
+        color: #ffffff;
+        border: 2px solid #ffffff;
+        transform: scale(1.05); 
+        box-shadow: 0 0 40px rgba(0, 229, 255, 0.8), inset 0 0 20px rgba(0, 229, 255, 0.5); 
+    }
     
     /* Metric Highlights */
-    div[data-testid="stMetricValue"] { color: #00e5ff; font-weight: bold; }
+    div[data-testid="stMetricValue"] { 
+        color: #00e5ff; 
+        font-family: 'Orbitron', sans-serif;
+        font-weight: 900; 
+        font-size: 3rem;
+        text-align: center;
+        text-shadow: 0 0 20px rgba(0, 229, 255, 0.6);
+    }
+    div[data-testid="stMetricLabel"] {
+        font-family: 'Rajdhani', sans-serif;
+        color: #94a3b8;
+        font-size: 1.2rem;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+    
+    /* File Uploader - Circular Theme */
+    [data-testid="stFileUploadDropzone"] {
+        background: rgba(16, 22, 35, 0.7);
+        border: 2px dashed rgba(0, 229, 255, 0.5);
+        border-radius: 30px;
+        padding: 30px !important;
+        transition: all 0.3s ease;
+    }
+    [data-testid="stFileUploadDropzone"]:hover {
+        border: 2px solid #00e5ff;
+        background: rgba(0, 229, 255, 0.1);
+        box-shadow: inset 0 0 30px rgba(0, 229, 255, 0.2);
+        transform: scale(1.02);
+    }
+    
+    /* Input/Text areas */
+    .stTextInput input, .stTextArea textarea {
+        background: rgba(16, 22, 35, 0.9) !important;
+        border: 2px solid rgba(0, 229, 255, 0.4) !important;
+        color: #e2e8f0 !important;
+        border-radius: 50px !important; /* Pill shaped input */
+        padding: 10px 20px !important;
+    }
+    .stTextInput input:focus, .stTextArea textarea:focus {
+        border: 2px solid #00e5ff !important;
+        box-shadow: 0 0 20px rgba(0, 229, 255, 0.4) !important;
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #020617; }
+    ::-webkit-scrollbar-thumb { background: #00e5ff; border-radius: 10px; }
+    
+    /* Divider */
+    hr {
+        border-top: 2px dashed rgba(0, 229, 255, 0.2);
+        margin: 40px 0;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -181,7 +389,7 @@ col_left, col_mid, col_right = st.columns([1.2, 1.5, 1.2], gap="large")
 
 with col_mid:
     st.header("🎙️ CORE AUDIO INPUT")
-    st.markdown("<div style='text-align: center; color: #888; margin-bottom: 15px;'>Speak directly into the neural engine</div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align: center; color: #64748b; margin-bottom: 15px; font-family: \"Rajdhani\", sans-serif; font-size: 1.1rem; letter-spacing: 1px;'>INITIALIZE NEURAL LINK & SPEAK QUERY</div>", unsafe_allow_html=True)
     
     recorded_audio = st.audio_input("Record your query:")
     
@@ -230,10 +438,29 @@ with col_right:
             transcript, answer, latency = process_query(audio_bytes)
             
             if transcript != "Error":
-                st.success("Decryption Successful")
-                st.markdown(f"**🗣️ Transcript:**<br> _{transcript}_", unsafe_allow_html=True)
+                st.success("✅ DECRYPTION SUCCESSFUL")
                 
-                st.markdown(f"**🤖 AI Response:**<br> {answer}", unsafe_allow_html=True)
+                st.markdown(f"""
+                <div style="background: rgba(0,229,255,0.03); border-left: 3px solid #00e5ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,229,255,0.05); backdrop-filter: blur(5px);">
+                    <div style="color: #00e5ff; font-family: 'Orbitron', sans-serif; font-size: 0.9rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase;">
+                        🗣️ Decoded Transcript
+                    </div>
+                    <div style="font-family: 'Rajdhani', sans-serif; font-size: 1.15rem; color: #cbd5e1; line-height: 1.4;">
+                        {transcript}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                st.markdown(f"""
+                <div style="background: rgba(177,0,205,0.03); border-left: 3px solid #b100cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(177,0,205,0.05); backdrop-filter: blur(5px);">
+                    <div style="color: #b100cd; font-family: 'Orbitron', sans-serif; font-size: 0.9rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase;">
+                        🤖 Neural Response
+                    </div>
+                    <div style="font-family: 'Rajdhani', sans-serif; font-size: 1.25rem; color: #f8fafc; font-weight: 500; line-height: 1.5;">
+                        {answer}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
                 
                 if latency < 10:
                     st.metric(label="⚡ Quantum Speed (Cache Hit)", value=f"{latency} ms")
