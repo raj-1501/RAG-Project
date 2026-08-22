@@ -10,255 +10,84 @@ import requests
 from sentence_transformers import SentenceTransformer
 from gtts import gTTS
 
-st.set_page_config(page_title="Neural Voice RAG", page_icon="🧿", layout="wide")
+st.set_page_config(page_title="Voice Enabled RAG Project", page_icon="✨", layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap');
-
-    /* Hide standard elements */
-    header[data-testid="stHeader"] { display: none !important; }
-    footer { display: none !important; }
-
-    /* Global Deep Space Theme */
-    .stApp { 
-        background-color: #020617;
-        background-image: 
-            radial-gradient(circle at 50% 50%, rgba(0, 229, 255, 0.05) 0%, transparent 60%),
-            repeating-radial-gradient(circle at 50% 50%, transparent 0, transparent 40px, rgba(0, 229, 255, 0.03) 41px, rgba(0, 229, 255, 0.03) 42px);
-        color: #e2e8f0; 
-        font-family: 'Rajdhani', sans-serif; 
-        overflow-x: hidden;
-    }
-    
-    /* Radar Sweeping Animation */
-    .stApp::after {
-        content: "";
-        position: fixed;
-        top: 50%; left: 50%;
-        width: 150vw; height: 150vw;
-        background: conic-gradient(from 0deg, transparent 70%, rgba(0, 229, 255, 0.1) 100%);
-        transform-origin: center center;
-        transform: translate(-50%, -50%);
-        animation: radarSweep 10s linear infinite;
-        pointer-events: none;
-        z-index: 0;
-    }
-    @keyframes radarSweep { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
-
-    /* Center Container & Elevate over Radar */
-    .block-container {
-        max-width: 95% !important;
-        padding-top: 2rem !important;
-        position: relative;
-        z-index: 10;
-    }
-
-    /* --- ORBITAL LAYOUT ARCHITECTURE --- */
-
-    /* 1. Left Pod (Data Ingestion) */
-    [data-testid="column"]:nth-of-type(1) {
-        background: rgba(2, 6, 23, 0.75);
-        border: 2px solid rgba(0, 229, 255, 0.3);
-        border-radius: 100px 30px 30px 100px; /* Curved Left */
-        padding: 50px 30px;
-        box-shadow: 0 0 40px rgba(0, 229, 255, 0.1);
-        backdrop-filter: blur(15px);
-        transform: perspective(800px) rotateY(10deg);
-        transition: transform 0.5s ease;
-        margin-top: 50px;
-    }
-    [data-testid="column"]:nth-of-type(1):hover { transform: perspective(800px) rotateY(0deg) scale(1.02); }
-
-    /* 2. Right Pod (System Output) */
-    [data-testid="column"]:nth-of-type(3) {
-        background: rgba(2, 6, 23, 0.75);
-        border: 2px solid rgba(177, 0, 205, 0.3);
-        border-radius: 30px 100px 100px 30px; /* Curved Right */
-        padding: 50px 30px;
-        box-shadow: 0 0 40px rgba(177, 0, 205, 0.1);
-        backdrop-filter: blur(15px);
-        transform: perspective(800px) rotateY(-10deg);
-        transition: transform 0.5s ease;
-        margin-top: 50px;
-    }
-    [data-testid="column"]:nth-of-type(3):hover { transform: perspective(800px) rotateY(0deg) scale(1.02); }
-
-    /* 3. Center Core (Audio Input & Engine) */
-    [data-testid="column"]:nth-of-type(2) {
-        background: radial-gradient(circle at 50% 50%, rgba(13, 22, 37, 0.95), rgba(2, 6, 23, 0.98));
-        border: 4px solid #00e5ff;
-        border-radius: 60px; /* Massive pill/oval shape */
-        padding: 60px 40px;
-        box-shadow: 0 0 60px rgba(0, 229, 255, 0.5), inset 0 0 40px rgba(0, 229, 255, 0.3);
-        position: relative;
-        animation: pulseCore 3s infinite alternate;
-        z-index: 20;
-    }
-    
-    /* Glowing Rotating Rings around Core */
-    [data-testid="column"]:nth-of-type(2)::before {
-        content: "";
-        position: absolute;
-        top: -30px; left: -30px; right: -30px; bottom: -30px;
-        border: 3px dashed rgba(177, 0, 205, 0.7);
-        border-radius: 80px;
-        animation: spinRing 20s linear infinite;
-        pointer-events: none;
-    }
-    [data-testid="column"]:nth-of-type(2)::after {
-        content: "";
-        position: absolute;
-        top: -50px; left: -50px; right: -50px; bottom: -50px;
-        border: 2px solid rgba(0, 229, 255, 0.4);
-        border-radius: 100px;
-        animation: spinRingRev 30s linear infinite;
-        pointer-events: none;
-    }
-    
-    @keyframes spinRing { 100% { transform: rotate(360deg); } }
-    @keyframes spinRingRev { 100% { transform: rotate(-360deg); } }
-    @keyframes pulseCore {
-        from { box-shadow: 0 0 40px rgba(0, 229, 255, 0.3), inset 0 0 30px rgba(0, 229, 255, 0.2); border-color: rgba(0,229,255,0.7); }
-        to { box-shadow: 0 0 90px rgba(0, 229, 255, 0.7), inset 0 0 70px rgba(0, 229, 255, 0.5); border-color: #00e5ff; }
-    }
-
-    /* Main Titles */
-    .main-title { 
-        text-align: center; 
-        font-family: 'Orbitron', sans-serif;
-        font-size: 4rem;
-        font-weight: 900; 
-        letter-spacing: 8px; 
-        background: -webkit-linear-gradient(#00e5ff, #ffffff);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        filter: drop-shadow(0 0 15px rgba(0, 229, 255, 0.6));
-        margin-bottom: 0px;
-    }
-    
-    .sub-title { 
-        text-align: center; 
-        color: #b100cd; 
-        font-family: 'Orbitron', sans-serif;
-        font-size: 1.4rem; 
-        font-weight: 700;
-        letter-spacing: 5px; 
-        margin-bottom: 60px; 
-        text-transform: uppercase;
-        text-shadow: 0px 0px 15px rgba(177, 0, 205, 0.8);
-    }
-    
-    /* Column Headers */
-    h1, h2, h3 { 
-        color: #00e5ff !important; 
-        font-family: 'Orbitron', sans-serif;
-        text-align: center;
-        text-transform: uppercase; 
-        font-size: 1.4rem; 
-        border-bottom: none; 
-        padding-bottom: 15px;
-        margin-bottom: 25px;
-        letter-spacing: 2px;
-        text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
-    }
-    
-    /* Audio Player Styling */
-    .stAudio { 
-        border-radius: 50px; /* Pill shape for audio */
-        border: 2px solid rgba(177, 0, 205, 0.6); 
-        box-shadow: 0 0 25px rgba(177, 0, 205, 0.3); 
-        background: rgba(0,0,0,0.7);
-        padding: 5px;
-    }
-    
-    /* Futuristic Buttons - Pill Shaped */
-    div.stButton > button:first-child { 
-        background: transparent;
-        color: #00e5ff; 
-        font-family: 'Orbitron', sans-serif;
-        font-weight: 900; 
-        letter-spacing: 3px;
-        border-radius: 50px; /* Completely rounded pill */
-        border: 2px solid #00e5ff; 
-        padding: 20px; 
-        width: 100%;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-        box-shadow: 0 0 20px rgba(0, 229, 255, 0.2), inset 0 0 10px rgba(0, 229, 255, 0.2);
-        text-transform: uppercase;
-    }
-    div.stButton > button:first-child:hover { 
-        background: rgba(0, 229, 255, 0.2);
-        color: #ffffff;
-        border: 2px solid #ffffff;
-        transform: scale(1.05); 
-        box-shadow: 0 0 40px rgba(0, 229, 255, 0.8), inset 0 0 20px rgba(0, 229, 255, 0.5); 
-    }
-    
-    /* Metric Highlights */
-    div[data-testid="stMetricValue"] { 
-        color: #00e5ff; 
-        font-family: 'Orbitron', sans-serif;
-        font-weight: 900; 
-        font-size: 3rem;
-        text-align: center;
-        text-shadow: 0 0 20px rgba(0, 229, 255, 0.6);
-    }
-    div[data-testid="stMetricLabel"] {
-        font-family: 'Rajdhani', sans-serif;
-        color: #94a3b8;
-        font-size: 1.2rem;
-        text-align: center;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-    }
-    
-    /* File Uploader - Circular Theme */
-    [data-testid="stFileUploadDropzone"] {
-        background: rgba(16, 22, 35, 0.7);
-        border: 2px dashed rgba(0, 229, 255, 0.5);
-        border-radius: 30px;
-        padding: 30px !important;
-        transition: all 0.3s ease;
-    }
-    [data-testid="stFileUploadDropzone"]:hover {
-        border: 2px solid #00e5ff;
-        background: rgba(0, 229, 255, 0.1);
-        box-shadow: inset 0 0 30px rgba(0, 229, 255, 0.2);
-        transform: scale(1.02);
-    }
-    
-    /* Input/Text areas */
-    .stTextInput input, .stTextArea textarea {
-        background: rgba(16, 22, 35, 0.9) !important;
-        border: 2px solid rgba(0, 229, 255, 0.4) !important;
-        color: #e2e8f0 !important;
-        border-radius: 50px !important; /* Pill shaped input */
-        padding: 10px 20px !important;
-    }
-    .stTextInput input:focus, .stTextArea textarea:focus {
-        border: 2px solid #00e5ff !important;
-        box-shadow: 0 0 20px rgba(0, 229, 255, 0.4) !important;
-    }
-    
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #020617; }
-    ::-webkit-scrollbar-thumb { background: #00e5ff; border-radius: 10px; }
-    
-    /* Divider */
-    hr {
-        border-top: 2px dashed rgba(0, 229, 255, 0.2);
-        margin: 40px 0;
-    }
-    </style>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* Global Settings */
+html, body, .stApp { font-family: 'Inter', sans-serif; }
+/* Hide Default Elements */
+#MainMenu {visibility: hidden;}
+header {visibility: hidden;}
+footer {visibility: hidden;}
+.stDeployButton {display: none;}
+/* Theme Toggle */
+div[data-testid="stCheckbox"] { position: fixed; top: 20px; right: 30px; z-index: 999999; background: rgba(255, 255, 255, 0.05); padding: 8px 16px; border-radius: 20px; backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.3s ease; }
+div[data-testid="stCheckbox"]:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.2); }
+/* Dark Theme Default */
+.stApp { background: #0f172a; background-image: radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.08), transparent 25%), radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%), radial-gradient(circle at 50% 0%, rgba(236, 72, 153, 0.05), transparent 20%); color: #f8fafc; }
+/* Main Container */
+.main .block-container { padding-top: 3rem !important; max-width: 1200px; }
+/* Column Cards */
+[data-testid="column"] > div { background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; padding: 32px; box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.4); backdrop-filter: blur(20px); transition: transform 0.3s ease, box-shadow 0.3s ease; height: 100%; }
+[data-testid="column"] > div:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5); border-color: rgba(255, 255, 255, 0.15); }
+/* Typography */
+h1, h2, h3, p, span, div { color: #f8fafc; }
+h3 { font-weight: 600; font-size: 1.5rem !important; margin-bottom: 1.5rem !important; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; }
+/* Buttons */
+.stButton > button { background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%) !important; color: white !important; border: none !important; padding: 0.75rem 1.5rem !important; border-radius: 9999px !important; font-weight: 500 !important; font-size: 1.05rem !important; letter-spacing: 0.5px; box-shadow: 0 4px 14px 0 rgba(139, 92, 246, 0.39) !important; transition: all 0.3s ease !important; width: 100%; margin-top: 1rem; }
+.stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5) !important; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%) !important; }
+/* Secondary Buttons (Run Analytics) */
+[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(30, 41, 59, 0.8) !important; border: 1px solid rgba(255,255,255,0.1) !important; box-shadow: none !important; }
+[data-testid="column"]:nth-child(2) .stButton > button:hover { background: rgba(51, 65, 85, 0.8) !important; border-color: rgba(255,255,255,0.2) !important; }
+/* Uploaders */
+[data-testid="stFileUploader"] { background: rgba(15, 23, 42, 0.4); border: 2px dashed rgba(148, 163, 184, 0.2); border-radius: 16px; padding: 1rem; transition: all 0.3s ease; }
+[data-testid="stFileUploader"]:hover { border-color: #8b5cf6; background: rgba(15, 23, 42, 0.6); }
+/* Audio Player */
+.stAudio { border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); overflow: hidden; }
+/* Metrics */
+[data-testid="stMetricValue"] { font-size: 2.2rem !important; font-weight: 700; background: linear-gradient(135deg, #34d399, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+[data-testid="stMetricLabel"] { font-size: 0.9rem !important; color: #94a3b8 !important; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
+/* Alerts */
+.stAlert { border-radius: 16px !important; border: 1px solid rgba(255,255,255,0.05) !important; backdrop-filter: blur(10px); }
+/* Mobile adjustments */
+@media (max-width: 768px) { .main .block-container { padding: 2rem 1rem !important; } [data-testid="column"] > div { padding: 20px; margin-bottom: 20px; } div[data-testid="stCheckbox"] { top: 10px; right: 10px; padding: 6px 12px; } }
+</style>
 """, unsafe_allow_html=True)
 
-st.markdown('<h1 class="main-title">🧿 NEURAL VOICE RAG ENGINE</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">Enterprise AI Architecture</p>', unsafe_allow_html=True)
+if 'is_light' not in st.session_state:
+    st.session_state.is_light = False
+is_light_mode = st.toggle("🌙 / ☀️", key="is_light")
+
+if is_light_mode:
+    st.markdown("""
+<style>
+.stApp { background: #f8fafc; background-image: radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.05), transparent 25%), radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.05), transparent 25%); color: #0f172a; }
+h1, h2, h3, p, span, div { color: #0f172a; }
+[data-testid="column"] > div { background: rgba(255, 255, 255, 0.8); border: 1px solid rgba(0, 0, 0, 0.05); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05); }
+[data-testid="column"] > div:hover { border-color: rgba(0, 0, 0, 0.1); box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1); }
+h3 { border-bottom-color: rgba(0,0,0,0.05); }
+[data-testid="stFileUploader"] { background: rgba(241, 245, 249, 0.6); border-color: rgba(203, 213, 225, 0.8); }
+[data-testid="stFileUploader"]:hover { border-color: #3b82f6; background: rgba(255, 255, 255, 0.9); }
+div[data-testid="stCheckbox"] { background: rgba(255, 255, 255, 0.8); border: 1px solid rgba(0, 0, 0, 0.1); color: #0f172a !important; }
+[data-testid="stMetricLabel"] { color: #64748b !important; }
+[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(241, 245, 249, 1) !important; border: 1px solid rgba(0,0,0,0.1) !important; color: #0f172a !important; }
+[data-testid="column"]:nth-child(2) .stButton > button:hover { background: rgba(226, 232, 240, 1) !important; border-color: rgba(0,0,0,0.2) !important; }
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<div style="text-align: center; margin-bottom: 4rem; margin-top: 1rem;">
+    <h1 style="font-size: 4.5rem; font-weight: 800; margin-bottom: 0.5rem; background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1.5px;">Voice Enabled RAG Project</h1>
+    <p style="font-size: 1.25rem; color: #64748b; font-weight: 400; max-width: 600px; margin: 0 auto; letter-spacing: 0.5px;">Next-Generation Multilingual Voice Intelligence</p>
+</div>
+""", unsafe_allow_html=True)
 
 @st.cache_resource(show_spinner=False)
 def load_ai_system():
+    
     model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
     index = faiss.read_index("vector.index")
     with open("meta.pkl", "rb") as f:
@@ -272,10 +101,13 @@ def get_audio_hash(audio_bytes):
     return hashlib.md5(audio_bytes).hexdigest()
 
 def sarvam_stt(audio_bytes):
-    url = "https://api.sarvam.ai/speech-to-text-translate"
+    url = "https://api.sarvam.ai/speech-to-text"
     headers = {"api-subscription-key": os.getenv("SARVAM_API_KEY", "")}
     files = {"file": ("audio.wav", audio_bytes, "audio/wav")}
-    data = {"prompt": ""}
+    data = {
+        "model": "saaras:v3",
+        "language_code": "unknown"
+    }
     
     try:
         res = requests.post(url, headers=headers, files=files, data=data, timeout=5.0)
@@ -295,6 +127,7 @@ def retrieve_context(query):
         if idx != -1:
             try:
                 chunk = meta[idx]
+                
                 if isinstance(chunk, dict):
                     valid_chunks.append(str(chunk.get("text", chunk)))
                 else:
@@ -318,12 +151,12 @@ def groq_llm(query, context):
         
     headers = {"Authorization": f"Bearer {api_key}"}
     
-    is_hindi = bool(re.search(r'[\u0900-\u097F]', query))
-    
-    if is_hindi:
-        lang_command = "You MUST translate and write the final answer ENTIRELY in pure Hindi (Devanagari script). No English words allowed."
-    else:
-        lang_command = "You MUST write the final answer ENTIRELY in English. No Hindi words allowed."
+    lang_command = (
+        "Identify the exact language of the user's question (e.g., Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, etc.). "
+        "You MUST reply entirely in that exact same language using its native script (e.g., Devanagari for Hindi, Bengali script for Bengali, etc.). "
+        "If the question is in English, reply entirely in English. "
+        "Never translate an Indian language query to English."
+    )
         
     system_prompt = (
         "You are an expert summarizer. Analyze the context and answer the question accurately.\n"
@@ -354,7 +187,6 @@ def groq_llm(query, context):
             
     except Exception as e:
         return f"❌ System Crash: {str(e)}"
-
 def process_query(audio_bytes):
     start_time = time.time()
     file_hash = get_audio_hash(audio_bytes)
@@ -380,94 +212,226 @@ def process_query(audio_bytes):
 
 def generate_and_play_audio(text):
     if text and "Error" not in text:
-        detected_lang = 'hi' if re.search(r'[\u0900-\u097F]', text) else 'en'
+        if re.search(r'[\u0980-\u09FF]', text): detected_lang = 'bn' # Bengali
+        elif re.search(r'[\u0A00-\u0A7F]', text): detected_lang = 'pa' # Punjabi
+        elif re.search(r'[\u0A80-\u0AFF]', text): detected_lang = 'gu' # Gujarati
+        elif re.search(r'[\u0B80-\u0BFF]', text): detected_lang = 'ta' # Tamil
+        elif re.search(r'[\u0C00-\u0C7F]', text): detected_lang = 'te' # Telugu
+        elif re.search(r'[\u0C80-\u0CFF]', text): detected_lang = 'kn' # Kannada
+        elif re.search(r'[\u0D00-\u0D7F]', text): detected_lang = 'ml' # Malayalam
+        elif re.search(r'[\u0900-\u097F]', text): detected_lang = 'hi' # Hindi/Marathi
+        else: detected_lang = 'en'
+        
         tts = gTTS(text=text, lang=detected_lang)
         tts.save("temp_answer.mp3")
+        
         st.audio("temp_answer.mp3", format="audio/mp3", autoplay=True)
+        
+        c1, c2 = st.columns([1, 1])
+        
+        with c1:
+            with open("temp_answer.mp3", "rb") as f:
+                st.download_button(
+                    label="⬇️ Download Audio Answer",
+                    data=f,
+                    file_name="ai_response.mp3",
+                    mime="audio/mp3",
+                    use_container_width=True
+                )
+                
+        with c2:
+            import streamlit.components.v1 as components
+            is_light = st.session_state.get("is_light", False)
+            bg_col = "#ffffff" if is_light else "#1e293b"
+            txt_col = "#0f172a" if is_light else "#f8fafc"
+            border_col = "#cbd5e1" if is_light else "#334155"
+            
+            html_code = f"""
+            <div style="display: flex; align-items: center; justify-content: center; gap: 12px; font-family: 'Inter', sans-serif; color: {txt_col}; height: 100%; margin-top: 8px;">
+                <label style="font-weight: 500; font-size: 0.95rem; margin:0;">Voice Speed:</label>
+                <select onchange="
+                    var audios = window.parent.document.getElementsByTagName('audio');
+                    if (audios.length > 0) {{
+                        audios[audios.length - 1].playbackRate = parseFloat(this.value);
+                    }}
+                " style="background-color: {bg_col}; color: {txt_col}; border: 1px solid {border_col}; padding: 8px 12px; border-radius: 8px; cursor: pointer; width: 110px; font-weight: 500; font-size: 0.95rem; outline: none; transition: all 0.2s ease;">
+                    <option value="0.5">0.5x</option>
+                    <option value="0.75">0.75x</option>
+                    <option value="1.0" selected>1.0x Normal</option>
+                    <option value="1.25">1.25x</option>
+                    <option value="1.5">1.5x</option>
+                    <option value="2.0">2.0x</option>
+                </select>
+            </div>
+            """
+            components.html(html_code, height=60)
 
-col_left, col_mid, col_right = st.columns([1.2, 1.5, 1.2], gap="large")
+# Inject Custom X (Clear) Button globally without affecting column alignments
+import streamlit.components.v1 as components
+components.html("""
+<script>
+    setInterval(function() {
+        var parent = window.parent.document;
+        var audioInputs = parent.querySelectorAll('[data-testid="stAudioInput"]');
+        
+        audioInputs.forEach(function(audioInput) {
+            if (!audioInput.querySelector('#custom-clear-mic')) {
+                var x = parent.createElement('div');
+                x.id = 'custom-clear-mic';
+                x.innerHTML = '✖';
+                x.style.position = 'absolute';
+                x.style.right = '15px';
+                x.style.top = '50%';
+                x.style.transform = 'translateY(-50%)';
+                x.style.cursor = 'pointer';
+                x.style.fontSize = '13px';
+                x.style.color = '#ff4b4b'; // Red color
+                x.style.zIndex = '999';
+                x.style.transition = 'transform 0.2s';
+                x.title = "Clear Recording";
+                x.style.display = 'none'; // Hidden by default
+                
+                x.onmouseover = function() { this.style.transform = 'translateY(-50%) scale(1.3)'; };
+                x.onmouseout = function() { this.style.transform = 'translateY(-50%) scale(1)'; };
+                
+                // Attach to the actual record box (usually the second child after the label)
+                var recordArea = audioInput.children.length > 1 ? audioInput.children[1] : audioInput;
+                recordArea.style.position = 'relative';
+                recordArea.appendChild(x);
+                
+                x.onclick = function(e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    var btns = audioInput.querySelectorAll('button');
+                    btns.forEach(function(btn) {
+                        var label = (btn.getAttribute('aria-label') || '').toLowerCase();
+                        if (label.includes('clear') || label.includes('delete') || label.includes('remove') || label.includes('reset')) {
+                            btn.click();
+                        }
+                    });
+                };
+            }
+            
+            // Toggle visibility based on whether audio is recorded (i.e. native clear button exists)
+            var customX = audioInput.querySelector('#custom-clear-mic');
+            if (customX) {
+                var hasRecorded = false;
+                var btns = audioInput.querySelectorAll('button');
+                btns.forEach(function(btn) {
+                    var label = (btn.getAttribute('aria-label') || '').toLowerCase();
+                    if (label.includes('clear') || label.includes('delete') || label.includes('remove') || label.includes('reset')) {
+                        hasRecorded = true;
+                    }
+                });
+                customX.style.display = hasRecorded ? 'block' : 'none';
+            }
+            
+            // Shift the timer text left so they don't overlap
+            var allElements = audioInput.querySelectorAll('*');
+            allElements.forEach(function(el) {
+                if (el.childNodes.length === 1 && el.childNodes[0].nodeType === 3) {
+                    if (/^\d{1,2}:\d{2}$/.test(el.innerText.trim())) {
+                        if (el.style.transform !== 'translateX(-15px)') {
+                            el.style.transform = 'translateX(-15px)';
+                        }
+                    }
+                }
+            });
+        });
+    }, 500);
+</script>
+""", height=0)
 
-with col_mid:
-    st.header("🎙️ CORE AUDIO INPUT")
-    st.markdown("<div style='text-align: center; color: #64748b; margin-bottom: 15px; font-family: \"Rajdhani\", sans-serif; font-size: 1.1rem; letter-spacing: 1px;'>INITIALIZE NEURAL LINK & SPEAK QUERY</div>", unsafe_allow_html=True)
-    
-    recorded_audio = st.audio_input("Record your query:")
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    process_btn = st.button("🚀 EXECUTE NEURAL QUERY")
+col1, col2 = st.columns([1, 1], gap="large")
 
-with col_left:
-    st.header("📂 DATA INGESTION")
-    uploaded_file = st.file_uploader("Upload local .wav file", type=["wav"], key="single_upload")
+with col1:
+    st.markdown("<h3>🎤 Voice Interaction</h3>", unsafe_allow_html=True)
+    recorded_audio = st.audio_input("Record your question live:")
+
+    st.markdown("<div style='text-align: center; color: #94a3b8; margin: 1.5rem 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 500;'>or</div>", unsafe_allow_html=True)
+
+    uploaded_file = st.file_uploader("Upload an audio file (.wav)", type=["wav"], key="single_upload")
+    if uploaded_file is not None:
+        st.audio(uploaded_file, format="audio/wav")
+
+    audio_source = recorded_audio if recorded_audio else uploaded_file
     
-    st.divider()
+    if st.button("✨ Process Query", type="primary") and audio_source:
+        audio_bytes = audio_source.getvalue()
+        with st.spinner("Processing with AI..."):
+            transcript, answer, latency = process_query(audio_bytes)
+            
+            if transcript != "Error":
+                st.success("Query Processed Successfully!")
+                st.markdown(f"**🗣️ Recognized Text:**\n> {transcript}")
+                st.info(f"**🤖 AI Answer:**\n{answer}")
+                
+                if latency < 10:
+                    st.metric(label="System Latency", value=f"{latency} ms")
+                    st.toast('Ultra-Fast Latency Achieved!', icon='🚀')
+                
+                generate_and_play_audio(answer)
+            else:
+                st.error("Processing Failed. Please try again.")
+
+with col2:
+    st.markdown("<h3>⚡ Performance Analytics</h3>", unsafe_allow_html=True)
     
-    st.header("📊 BATCH ANALYTICS")
-    batch_files = st.file_uploader("Upload Bulk Queries (.wav)", type=["wav"], accept_multiple_files=True, key="batch_upload")
+    benchmark_mic = st.audio_input("Record directly for Benchmark:", key="benchmark_mic")
     
-    if st.button("🔬 RUN DIAGNOSTICS") and batch_files:
+    st.markdown("<div style='text-align: center; color: #94a3b8; margin: 1.5rem 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 500;'>or</div>", unsafe_allow_html=True)
+    
+    batch_files = st.file_uploader("Upload Test Queries (.wav)", type=["wav"], accept_multiple_files=True, key="batch_upload")
+    
+    sources = batch_files if batch_files else ([benchmark_mic] if benchmark_mic else [])
+    
+    if st.button("📈 Run Analytics", type="secondary") and sources:
         latencies = []
         progress_bar = st.progress(0)
         
-        for i, file in enumerate(batch_files):
+        st.write("Executing Benchmark Sequence...")
+        for i, file in enumerate(sources):
             audio_bytes = file.getvalue()
             _, _, lat = process_query(audio_bytes)
             latencies.append(lat)
-            progress_bar.progress((i + 1) / len(batch_files))
+            st.write(f"File {i+1} Processed Successfully.")
+            progress_bar.progress((i + 1) / len(sources))
             
         if latencies:
             p50 = np.percentile(latencies, 50)
             p70 = np.percentile(latencies, 70)
             p100 = np.percentile(latencies, 100)
             
-            if p100 < 10:
-                st.success("Target Latency Met!")
-                st.metric("P50 Latency", f"{p50:.2f} ms")
-                st.metric("P100 Latency", f"{p100:.2f} ms")
-                st.balloons()
-            else:
-                st.info("System Initialized. Run again for cached metrics.")
-
-with col_right:
-    st.header("📡 SYSTEM OUTPUT")
-    audio_source = recorded_audio if recorded_audio else uploaded_file
-    
-    if process_btn and audio_source:
-        audio_bytes = audio_source.getvalue()
-        with st.spinner("Processing via Vector Space..."):
-            transcript, answer, latency = process_query(audio_bytes)
+            st.markdown("<hr style='border-color: rgba(255,255,255,0.1); margin: 2rem 0;'>", unsafe_allow_html=True)
             
-            if transcript != "Error":
-                st.success("✅ DECRYPTION SUCCESSFUL")
+            if p100 < 10:
+                st.markdown("<h4 style='color: #34d399; margin-bottom: 1rem;'>🏆 Target Met (< 10ms)</h4>", unsafe_allow_html=True)
+                m1, m2, m3 = st.columns(3)
+                m1.metric("P50", f"{p50:.2f} ms")
+                m2.metric("P70", f"{p70:.2f} ms")
+                m3.metric("P100", f"{p100:.2f} ms")
                 
-                st.markdown(f"""
-                <div style="background: rgba(0,229,255,0.03); border-left: 3px solid #00e5ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,229,255,0.05); backdrop-filter: blur(5px);">
-                    <div style="color: #00e5ff; font-family: 'Orbitron', sans-serif; font-size: 0.9rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase;">
-                        🗣️ Decoded Transcript
-                    </div>
-                    <div style="font-family: 'Rajdhani', sans-serif; font-size: 1.15rem; color: #cbd5e1; line-height: 1.4;">
-                        {transcript}
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                st.markdown(f"""
-                <div style="background: rgba(177,0,205,0.03); border-left: 3px solid #b100cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(177,0,205,0.05); backdrop-filter: blur(5px);">
-                    <div style="color: #b100cd; font-family: 'Orbitron', sans-serif; font-size: 0.9rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase;">
-                        🤖 Neural Response
-                    </div>
-                    <div style="font-family: 'Rajdhani', sans-serif; font-size: 1.25rem; color: #f8fafc; font-weight: 500; line-height: 1.5;">
-                        {answer}
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                if latency < 10:
-                    st.metric(label="⚡ Quantum Speed (Cache Hit)", value=f"{latency} ms")
-                
-                st.markdown("<br>", unsafe_allow_html=True)
-                generate_and_play_audio(answer)
-            else:
-                st.error("Engine Check Failed.")
-    else:
-        st.markdown("<div style='text-align: center; color: #334155; margin-top: 50px;'>Awaiting input stream...</div>", unsafe_allow_html=True)
+                import streamlit.components.v1 as components
+                components.html("""
+                <script>
+                    var parentWindow = window.parent;
+                    if (!parentWindow.document.getElementById('confetti-script')) {
+                        var script = parentWindow.document.createElement('script');
+                        script.id = 'confetti-script';
+                        script.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js';
+                        script.onload = function() { fireConfetti(); };
+                        parentWindow.document.head.appendChild(script);
+                    } else {
+                        fireConfetti();
+                    }
+                    function fireConfetti() {
+                        var duration = 3000;
+                        var end = Date.now() + duration;
+                        (function frame() {
+                            parentWindow.confetti({ particleCount: 5, angle: 50, spread: 55, startVelocity: 80, origin: { x: 0, y: 1 }, zIndex: 999999, colors: ['#3b82f6', '#8b5cf6', '#ec4899', '#34d399'] });
+                            parentWindow.confetti({ particleCount: 5, angle: 130, spread: 55, startVelocity: 80, origin: { x: 1, y: 1 }, zIndex: 999999, colors: ['#3b82f6', '#8b5cf6', '#ec4899', '#34d399'] });
+                            if (Date.now() < end) { parentWindow.requestAnimationFrame(frame); }
+                        }());
+                    }
+                </script>
+                """, height=0)
