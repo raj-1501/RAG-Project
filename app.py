@@ -15,45 +15,52 @@ st.set_page_config(page_title="Voice Enabled RAG Project", page_icon="✨", layo
 st.markdown("""
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 /* Global Settings */
-html, body, .stApp { font-family: 'Inter', sans-serif; }
+html, body, .stApp { font-family: 'Outfit', sans-serif; }
 /* Hide Default Elements */
 #MainMenu {visibility: hidden;}
 header {visibility: hidden;}
 footer {visibility: hidden;}
 .stDeployButton {display: none;}
 /* Theme Toggle */
-div[data-testid="stCheckbox"] { position: fixed; top: 20px; right: 30px; z-index: 999999; background: rgba(255, 255, 255, 0.05); padding: 8px 16px; border-radius: 20px; backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.3s ease; }
-div[data-testid="stCheckbox"]:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.2); }
-/* Dark Theme Default */
-.stApp { background: #0f172a; background-image: radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.08), transparent 25%), radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%), radial-gradient(circle at 50% 0%, rgba(236, 72, 153, 0.05), transparent 20%); color: #f8fafc; }
+div[data-testid="stCheckbox"] { position: fixed; top: 20px; right: 30px; z-index: 999999; background: #000; padding: 8px 16px; border-radius: 8px; border: 1px solid #0ff; box-shadow: 0 0 10px rgba(0, 255, 255, 0.5); transition: all 0.3s ease; }
+div[data-testid="stCheckbox"]:hover { background: #0ff; }
+div[data-testid="stCheckbox"]:hover p { color: #000 !important; }
+/* Dark Theme Default (Cyber Neon) */
+.stApp { background: #050505; background-image: radial-gradient(circle at 20% 50%, rgba(0, 255, 255, 0.05), transparent 40%), radial-gradient(circle at 80% 30%, rgba(255, 0, 255, 0.05), transparent 40%); color: #fff; }
 /* Main Container */
 .main .block-container { padding-top: 3rem !important; max-width: 1200px; }
+/* Hero Section */
+.hero-section { text-align: center; margin-bottom: 4rem; margin-top: 1rem; }
+.hero-section h1 { font-size: 4.5rem; font-weight: 800; margin-bottom: 0.5rem; color: #fff; text-shadow: 0 0 15px #0ff, 0 0 30px #f0f; letter-spacing: -1px; text-transform: uppercase; line-height: 1.1; }
+.hero-section p { font-size: 1.1rem; color: #0ff; font-weight: 500; max-width: 600px; margin: 0 auto; letter-spacing: 3px; text-transform: uppercase; }
 /* Column Cards */
-[data-testid="column"] > div { background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; padding: 32px; box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.4); backdrop-filter: blur(20px); transition: transform 0.3s ease, box-shadow 0.3s ease; height: 100%; }
-[data-testid="column"] > div:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5); border-color: rgba(255, 255, 255, 0.15); }
+[data-testid="column"] > div { background: rgba(10, 10, 10, 0.8); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 12px; padding: 32px; box-shadow: 0 0 20px rgba(0, 255, 255, 0.05); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); height: 100%; position: relative; overflow: hidden; }
+[data-testid="column"] > div::before { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, transparent, rgba(0,255,255,0.1), transparent); transform: skewX(-20deg); transition: 0.5s; }
+[data-testid="column"] > div:hover::before { left: 150%; }
+[data-testid="column"] > div:hover { transform: translateY(-5px); border-color: rgba(255, 0, 255, 0.5); box-shadow: 0 0 30px rgba(255, 0, 255, 0.15); }
 /* Typography */
-h1, h2, h3, p, span, div { color: #f8fafc; }
-h3 { font-weight: 600; font-size: 1.5rem !important; margin-bottom: 1.5rem !important; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; }
+h1, h2, h3, p, span, div { color: #fff; }
+h3 { font-weight: 700; font-size: 1.6rem !important; margin-bottom: 1.5rem !important; padding-bottom: 1rem; border-bottom: 2px dashed rgba(0,255,255,0.2); display: flex; align-items: center; gap: 10px; letter-spacing: 1px; text-transform: uppercase; }
 /* Buttons */
-.stButton > button { background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%) !important; color: white !important; border: none !important; padding: 0.75rem 1.5rem !important; border-radius: 9999px !important; font-weight: 500 !important; font-size: 1.05rem !important; letter-spacing: 0.5px; box-shadow: 0 4px 14px 0 rgba(139, 92, 246, 0.39) !important; transition: all 0.3s ease !important; width: 100%; margin-top: 1rem; }
-.stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5) !important; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%) !important; }
+.stButton > button { background: transparent !important; color: #0ff !important; border: 2px solid #0ff !important; padding: 0.75rem 1.5rem !important; border-radius: 4px !important; font-weight: 600 !important; font-size: 1.1rem !important; letter-spacing: 2px; text-transform: uppercase; box-shadow: 0 0 10px rgba(0,255,255,0.2), inset 0 0 10px rgba(0,255,255,0.1) !important; transition: all 0.3s ease !important; width: 100%; margin-top: 1rem; }
+.stButton > button:hover { background: #0ff !important; color: #000 !important; box-shadow: 0 0 20px rgba(0,255,255,0.6), inset 0 0 20px rgba(255,255,255,0.5) !important; transform: scale(1.02) !important; }
 /* Secondary Buttons (Run Analytics) */
-[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(30, 41, 59, 0.8) !important; border: 1px solid rgba(255,255,255,0.1) !important; box-shadow: none !important; }
-[data-testid="column"]:nth-child(2) .stButton > button:hover { background: rgba(51, 65, 85, 0.8) !important; border-color: rgba(255,255,255,0.2) !important; }
+[data-testid="column"]:nth-child(2) .stButton > button { border-color: #f0f !important; color: #f0f !important; box-shadow: 0 0 10px rgba(255,0,255,0.2), inset 0 0 10px rgba(255,0,255,0.1) !important; }
+[data-testid="column"]:nth-child(2) .stButton > button:hover { background: #f0f !important; color: #000 !important; box-shadow: 0 0 20px rgba(255,0,255,0.6) !important; }
 /* Uploaders */
-[data-testid="stFileUploader"] { background: rgba(15, 23, 42, 0.4); border: 2px dashed rgba(148, 163, 184, 0.2); border-radius: 16px; padding: 1rem; transition: all 0.3s ease; }
-[data-testid="stFileUploader"]:hover { border-color: #8b5cf6; background: rgba(15, 23, 42, 0.6); }
+[data-testid="stFileUploader"] { background: rgba(0, 0, 0, 0.5); border: 2px dashed #0ff; border-radius: 8px; padding: 1rem; transition: all 0.3s ease; }
+[data-testid="stFileUploader"]:hover { border-color: #f0f; background: rgba(20, 20, 20, 0.8); }
 /* Audio Player */
-.stAudio { border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); overflow: hidden; }
+.stAudio { border-radius: 8px; box-shadow: 0 0 15px rgba(0, 255, 255, 0.2); filter: hue-rotate(180deg) invert(1); }
 /* Metrics */
-[data-testid="stMetricValue"] { font-size: 2.2rem !important; font-weight: 700; background: linear-gradient(135deg, #34d399, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-[data-testid="stMetricLabel"] { font-size: 0.9rem !important; color: #94a3b8 !important; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
+[data-testid="stMetricValue"] { font-size: 2.5rem !important; font-weight: 700; color: #0ff; text-shadow: 0 0 10px rgba(0,255,255,0.5); }
+[data-testid="stMetricLabel"] { font-size: 0.8rem !important; color: #f0f !important; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }
 /* Alerts */
-.stAlert { border-radius: 16px !important; border: 1px solid rgba(255,255,255,0.05) !important; backdrop-filter: blur(10px); }
+.stAlert { border-radius: 4px !important; border: 1px solid rgba(0,255,255,0.3) !important; background: rgba(0,0,0,0.8) !important; box-shadow: 4px 4px 0px rgba(0,255,255,0.3) !important; }
 /* Mobile adjustments */
-@media (max-width: 768px) { .main .block-container { padding: 2rem 1rem !important; } [data-testid="column"] > div { padding: 20px; margin-bottom: 20px; } div[data-testid="stCheckbox"] { top: 10px; right: 10px; padding: 6px 12px; } }
+@media (max-width: 768px) { .main .block-container { padding: 2rem 1rem !important; } [data-testid="column"] > div { padding: 20px; margin-bottom: 20px; } div[data-testid="stCheckbox"] { top: 10px; right: 10px; padding: 6px 12px; } .hero-section h1 { font-size: 3rem; } }
 </style>
 """, unsafe_allow_html=True)
 
@@ -64,26 +71,31 @@ is_light_mode = st.toggle("🌙 / ☀️", key="is_light")
 if is_light_mode:
     st.markdown("""
 <style>
-.stApp { background: #f8fafc; background-image: radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.05), transparent 25%), radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.05), transparent 25%); color: #0f172a; }
-h1, h2, h3, p, span, div { color: #0f172a; }
-[data-testid="column"] > div { background: rgba(255, 255, 255, 0.8); border: 1px solid rgba(0, 0, 0, 0.05); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05); }
-[data-testid="column"] > div:hover { border-color: rgba(0, 0, 0, 0.1); box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1); }
-h3 { border-bottom-color: rgba(0,0,0,0.05); }
-[data-testid="stFileUploader"] { background: rgba(241, 245, 249, 0.6); border-color: rgba(203, 213, 225, 0.8); }
-[data-testid="stFileUploader"]:hover { border-color: #3b82f6; background: rgba(255, 255, 255, 0.9); }
-div[data-testid="stCheckbox"] { background: rgba(255, 255, 255, 0.8); border: 1px solid rgba(0, 0, 0, 0.1); color: #0f172a !important; }
-[data-testid="stMetricLabel"] { color: #64748b !important; }
-[data-testid="column"]:nth-child(2) .stButton > button { background: rgba(241, 245, 249, 1) !important; border: 1px solid rgba(0,0,0,0.1) !important; color: #0f172a !important; }
-[data-testid="column"]:nth-child(2) .stButton > button:hover { background: rgba(226, 232, 240, 1) !important; border-color: rgba(0,0,0,0.2) !important; }
+/* Light Theme Default (Neumorphic) */
+.stApp { background: #f0f0f3; background-image: none; color: #2d3436; }
+h1, h2, h3, p, span, div { color: #2d3436; }
+.hero-section h1 { color: #2d3436; text-shadow: 5px 5px 15px #cccdcf, -5px -5px 15px #ffffff; background: none; -webkit-text-fill-color: #2d3436; }
+.hero-section p { color: #636e72; font-weight: 500; letter-spacing: 1px; }
+[data-testid="column"] > div { background: #f0f0f3; border: none; border-radius: 30px; box-shadow: 20px 20px 60px #cccdcf, -20px -20px 60px #ffffff; transition: all 0.3s ease; }
+[data-testid="column"] > div:hover { box-shadow: inset 10px 10px 30px #cccdcf, inset -10px -10px 30px #ffffff; transform: none; border: none; }
+[data-testid="column"] > div::before { display: none; }
+h3 { border-bottom: none; border-left: 5px solid #2d3436; padding-left: 15px; margin-left: -15px; }
+[data-testid="stFileUploader"] { background: #f0f0f3; border: none; border-radius: 20px; box-shadow: inset 10px 10px 20px #cccdcf, inset -10px -10px 20px #ffffff; }
+[data-testid="stFileUploader"]:hover { border: none; background: #f0f0f3; }
+div[data-testid="stCheckbox"] { background: #f0f0f3; border: none; box-shadow: 5px 5px 15px #cccdcf, -5px -5px 15px #ffffff; color: #2d3436 !important; }
+div[data-testid="stCheckbox"]:hover { background: #f0f0f3; box-shadow: inset 5px 5px 10px #cccdcf, inset -5px -5px 10px #ffffff; }
+div[data-testid="stCheckbox"] p { color: #2d3436 !important; }
+[data-testid="stMetricLabel"] { color: #636e72 !important; font-weight: 700; letter-spacing: 1px; }
+[data-testid="stMetricValue"] { color: #2d3436; text-shadow: none; font-size: 2.5rem !important; }
+.stButton > button { background: #f0f0f3 !important; color: #2d3436 !important; border: none !important; border-radius: 50px !important; box-shadow: 10px 10px 20px #cccdcf, -10px -10px 20px #ffffff !important; font-weight: 700 !important; transition: all 0.2s ease !important; }
+.stButton > button:hover { background: #f0f0f3 !important; color: #00b894 !important; box-shadow: inset 10px 10px 20px #cccdcf, inset -10px -10px 20px #ffffff !important; transform: none !important; }
+[data-testid="column"]:nth-child(2) .stButton > button:hover { color: #d63031 !important; }
+.stAudio { filter: none; border-radius: 50px; box-shadow: 10px 10px 20px #cccdcf, -10px -10px 20px #ffffff; }
+.stAlert { background: #f0f0f3 !important; border: none !important; box-shadow: 5px 5px 15px #cccdcf, -5px -5px 15px #ffffff !important; border-radius: 15px !important; }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("""
-<div style="text-align: center; margin-bottom: 4rem; margin-top: 1rem;">
-    <h1 style="font-size: 4.5rem; font-weight: 800; margin-bottom: 0.5rem; background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1.5px;">Voice Enabled RAG Project</h1>
-    <p style="font-size: 1.25rem; color: #64748b; font-weight: 400; max-width: 600px; margin: 0 auto; letter-spacing: 0.5px;">Next-Generation Multilingual Voice Intelligence</p>
-</div>
-""", unsafe_allow_html=True)
+
 
 @st.cache_resource(show_spinner=False)
 def load_ai_system():
@@ -342,7 +354,20 @@ components.html("""
 </script>
 """, height=0)
 
-col1, col2 = st.columns([1, 1], gap="large")
+col_title, col2, col1 = st.columns([3, 3.5, 4.5], gap="medium")
+
+with col_title:
+    st.markdown("""
+    <style>
+    .hero-section { text-align: left !important; margin-top: 0 !important; margin-bottom: 2rem !important; }
+    .hero-section h1 { font-size: 3.5rem !important; }
+    .hero-section p { margin: 0 !important; }
+    </style>
+    <div class="hero-section">
+        <h1>Voice Enabled RAG Project</h1>
+        <p>Next-Generation Multilingual Voice Intelligence</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 with col1:
     st.markdown("<h3>🎤 Voice Interaction</h3>", unsafe_allow_html=True)
@@ -424,14 +449,27 @@ with col2:
                     } else {
                         fireConfetti();
                     }
+                    function shootRocket(x_pos) {
+                        parentWindow.confetti({ particleCount: 25, angle: 90, spread: 15, startVelocity: 100, origin: { x: x_pos, y: 1 }, colors: ['#ffffff', '#ffaa00'], ticks: 80, zIndex: 999999 });
+                        setTimeout(function() {
+                            parentWindow.confetti({ particleCount: 150, angle: 90, spread: 360, startVelocity: 45, origin: { x: x_pos, y: 0.2 }, colors: ['#3b82f6', '#8b5cf6', '#ec4899', '#34d399', '#facc15', '#ef4444'], zIndex: 999999 });
+                            setTimeout(function() {
+                                parentWindow.confetti({ particleCount: 80, angle: 90, spread: 360, startVelocity: 35, origin: { x: x_pos, y: 0.2 }, colors: ['#ffffff'], zIndex: 999999 });
+                            }, 150);
+                        }, 500);
+                    }
                     function fireConfetti() {
-                        var duration = 3000;
-                        var end = Date.now() + duration;
-                        (function frame() {
-                            parentWindow.confetti({ particleCount: 5, angle: 50, spread: 55, startVelocity: 80, origin: { x: 0, y: 1 }, zIndex: 999999, colors: ['#3b82f6', '#8b5cf6', '#ec4899', '#34d399'] });
-                            parentWindow.confetti({ particleCount: 5, angle: 130, spread: 55, startVelocity: 80, origin: { x: 1, y: 1 }, zIndex: 999999, colors: ['#3b82f6', '#8b5cf6', '#ec4899', '#34d399'] });
-                            if (Date.now() < end) { parentWindow.requestAnimationFrame(frame); }
-                        }());
+                        var rockets = 5;
+                        var current = 0;
+                        var interval = setInterval(function() {
+                            if (current >= rockets) {
+                                clearInterval(interval);
+                                return;
+                            }
+                            var x_pos = 0.2 + (Math.random() * 0.6); // Random position across the screen
+                            shootRocket(x_pos);
+                            current++;
+                        }, 600); // 1 rocket every 600ms
                     }
                 </script>
                 """, height=0)
